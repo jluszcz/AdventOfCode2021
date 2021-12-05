@@ -1,10 +1,10 @@
 use anyhow::{anyhow, Result};
 use log::{debug, trace, LevelFilter};
-use std::cmp::{max, min};
+use std::cmp::{max, min, Ordering};
 use std::fmt;
-use std::ops::{Index, IndexMut};
 use std::str::FromStr;
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 struct Point {
     x: u32,
     y: u32,
@@ -40,14 +40,17 @@ impl FromStr for Vent {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (start, end) = s
+        let (first, second) = s
             .split_once(" -> ")
             .ok_or_else(|| anyhow!("Start/End delimiter not found in {}", s))?;
 
-        Ok(Vent {
-            start: Point::from_str(start)?,
-            end: Point::from_str(end)?,
-        })
+        let first = Point::from_str(first)?;
+        let second = Point::from_str(second)?;
+
+        let start = min(first, second);
+        let end = max(first, second);
+
+        Ok(Vent { start, end })
     }
 }
 
@@ -66,6 +69,42 @@ impl Grid {
         Self {
             inner: vec![vec![0; width as usize + 1]; height as usize + 1],
         }
+    }
+
+    fn track_vent(&mut self, vent: &Vent) {
+        let (start, end) = (&vent.start, &vent.end);
+        if start.x == end.x {
+            let x = start.x as usize;
+            for y in start.y..=end.y {
+                self.inner[y as usize][x] += 1;
+            }
+        } else if start.y == end.y {
+            let y = start.y as usize;
+            for x in start.x..=end.x {
+                self.inner[y][x as usize] += 1;
+            }
+        } else {
+            let mut x = start.x;
+            let mut y = start.y;
+            while x != end.x && y != end.y {
+                self.inner[y as usize][x as usize] += 1;
+
+                match start.x.cmp(&end.x) {
+                    Ordering::Less => x += 1,
+                    Ordering::Greater => x -= 1,
+                    Ordering::Equal => (),
+                }
+
+                match start.y.cmp(&end.y) {
+                    Ordering::Less => y += 1,
+                    Ordering::Greater => y -= 1,
+                    Ordering::Equal => (),
+                }
+            }
+            self.inner[y as usize][x as usize] += 1;
+        }
+        debug!("Applied: {:?}", vent);
+        trace!("Grid: {:?}", self);
     }
 
     fn overlap_ct(&self) -> usize {
@@ -97,20 +136,6 @@ impl fmt::Debug for Grid {
     }
 }
 
-impl Index<usize> for Grid {
-    type Output = [u32];
-
-    fn index(&self, index: usize) -> &Self::Output {
-        self.inner[index].as_ref()
-    }
-}
-
-impl IndexMut<usize> for Grid {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.inner[index].as_mut()
-    }
-}
-
 fn main() -> Result<()> {
     aoc_utils::init_logger(LevelFilter::Info)?;
 
@@ -128,27 +153,7 @@ fn main() -> Result<()> {
 
     let mut grid = Grid::new(width, height);
     for vent in vents.iter() {
-        let (start, end) = (&vent.start, &vent.end);
-        if start.x == end.x {
-            let x = start.x as usize;
-            let start_y = min(start.y, end.y) as usize;
-            let end_y = max(start.y, end.y) as usize;
-            for y in start_y..=end_y {
-                grid[y][x] += 1;
-            }
-        } else if start.y == end.y {
-            let y = start.y as usize;
-            let start_x = min(start.x, end.x) as usize;
-            let end_x = max(start.x, end.x) as usize;
-            for x in start_x..=end_x {
-                grid[y][x] += 1;
-            }
-        } else {
-            debug!("Diagonal: {:?}", vent);
-            continue;
-        }
-        debug!("Applied: {:?}", vent);
-        trace!("Grid: {:?}", grid);
+        grid.track_vent(vent);
     }
 
     debug!("Grid: {:?}", grid);
