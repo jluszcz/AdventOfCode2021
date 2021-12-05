@@ -1,14 +1,8 @@
 use anyhow::{anyhow, Result};
-use env_logger::Target;
 use log::{debug, LevelFilter};
 use std::collections::HashMap;
 use std::fmt;
-use std::fs::File;
-use std::io::{prelude::*, BufReader};
-use std::path::Path;
 use std::str::FromStr;
-
-const PATH: &str = "input/input.txt";
 
 #[derive(Default)]
 struct Space {
@@ -131,15 +125,9 @@ impl fmt::Debug for Board {
 }
 
 fn main() -> Result<()> {
-    env_logger::builder()
-        .target(Target::Stdout)
-        .filter_level(LevelFilter::Info)
-        .try_init()?;
+    aoc_utils::init_logger(LevelFilter::Info)?;
 
-    let mut lines: Vec<String> = BufReader::new(File::open(&Path::new(PATH))?)
-        .lines()
-        .map(|l| l.unwrap())
-        .collect();
+    let mut lines = aoc_utils::read_lines(aoc_utils::INPUT_PATH)?;
 
     // First line is the plays
     let plays: Vec<u32> = lines
@@ -177,16 +165,9 @@ fn main() -> Result<()> {
 mod test {
     use super::*;
 
-    fn init() {
-        let _ = env_logger::builder()
-            .is_test(true)
-            .filter_level(LevelFilter::Debug)
-            .try_init();
-    }
-
     #[test]
     fn test_parse_board() -> Result<()> {
-        init();
+        aoc_utils::init_test_logger()?;
 
         let board = vec![
             "22 13 17 11  0",
@@ -207,7 +188,7 @@ mod test {
 
     #[test]
     fn test_winning_row() -> Result<()> {
-        init();
+        aoc_utils::init_test_logger()?;
 
         let board = vec![
             "22 13 17 11  0",
@@ -235,7 +216,7 @@ mod test {
 
     #[test]
     fn test_winning_column() -> Result<()> {
-        init();
+        aoc_utils::init_test_logger()?;
 
         let board = vec![
             "22 13 17 11  0",
