@@ -1,13 +1,12 @@
+use anyhow::{anyhow, Result};
+use env_logger::Target;
+use log::LevelFilter;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
-use anyhow::Result;
-use env_logger::Target;
-use log::LevelFilter;
-
-pub const INPUT_PATH: &str = "input/input.txt";
-pub const TEST_INPUT_PATH: &str = "input/test.txt";
+const INPUT_PATH: &str = "input/input.txt";
+const TEST_INPUT_PATH: &str = "input/test.txt";
 
 pub fn init_logger(level: LevelFilter) -> Result<()> {
     inner_init_logger(Some(level), false)
@@ -27,9 +26,23 @@ fn inner_init_logger(level: Option<LevelFilter>, is_test: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn read_lines(path: &'static str) -> Result<Vec<String>> {
-    Ok(BufReader::new(File::open(&Path::new(path))?)
+pub fn input() -> Result<Vec<String>> {
+    read_lines(INPUT_PATH)
+}
+
+pub fn test_input() -> Result<Vec<String>> {
+    read_lines(TEST_INPUT_PATH)
+}
+
+fn read_lines(path: &'static str) -> Result<Vec<String>> {
+    let lines: Vec<_> = BufReader::new(File::open(&Path::new(path))?)
         .lines()
-        .map(|l| l.unwrap())
-        .collect())
+        .filter_map(|l| l.ok())
+        .collect();
+
+    if !lines.is_empty() {
+        Ok(lines)
+    } else {
+        Err(anyhow!("No input: {}", path))
+    }
 }

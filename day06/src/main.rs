@@ -50,7 +50,7 @@ impl FromStr for Fish {
 fn main() -> Result<()> {
     aoc_utils::init_logger(LevelFilter::Info)?;
 
-    let lines = aoc_utils::read_lines(aoc_utils::INPUT_PATH)?;
+    let lines = aoc_utils::input()?;
     assert_eq!(1, lines.len());
 
     let mut fish = Fish::from_str(&lines[0])?;

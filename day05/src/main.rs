@@ -139,7 +139,7 @@ impl fmt::Debug for Grid {
 fn main() -> Result<()> {
     aoc_utils::init_logger(LevelFilter::Info)?;
 
-    let vents = aoc_utils::read_lines(aoc_utils::INPUT_PATH)?
+    let vents = aoc_utils::input()?
         .into_iter()
         .map(|l| Vent::from_str(&l).ok())
         .flatten()

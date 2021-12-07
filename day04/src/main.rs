@@ -127,7 +127,7 @@ impl fmt::Debug for Board {
 fn main() -> Result<()> {
     aoc_utils::init_logger(LevelFilter::Info)?;
 
-    let mut lines = aoc_utils::read_lines(aoc_utils::INPUT_PATH)?;
+    let mut lines = aoc_utils::input()?;
 
     // First line is the plays
     let plays: Vec<u32> = lines
