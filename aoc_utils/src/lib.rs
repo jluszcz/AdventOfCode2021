@@ -13,7 +13,7 @@ pub fn init_logger(level: LevelFilter) -> Result<()> {
 }
 
 pub fn init_test_logger() -> Result<()> {
-    inner_init_logger(Some(LevelFilter::Debug), true)
+    inner_init_logger(Some(LevelFilter::Trace), true)
 }
 
 fn inner_init_logger(level: Option<LevelFilter>, is_test: bool) -> Result<()> {
