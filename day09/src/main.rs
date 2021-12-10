@@ -1,5 +1,7 @@
 use anyhow::Result;
 use log::{debug, LevelFilter};
+use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashSet};
 use std::fmt;
 use std::str::FromStr;
 
@@ -40,13 +42,32 @@ impl HeightMap {
             .all(|(x, y)| self.inner[y][x] > spot)
     }
 
-    fn risk_level(&self, x: usize, y: usize) -> u32 {
+    fn _risk_level(&self, x: usize, y: usize) -> u32 {
         if self.is_low_spot(x, y) {
             let risk = 1 + self.inner[y][x];
             debug!("Risk of ({}, {}): {}", x, y, risk);
             risk
         } else {
             0
+        }
+    }
+
+    fn basin_size(&self, x: usize, y: usize) -> Option<usize> {
+        if self.is_low_spot(x, y) {
+            let mut queue = vec![(x, y)];
+            let mut visited = HashSet::new();
+
+            while let Some((x, y)) = queue.pop() {
+                visited.insert((x, y));
+                for (n_x, n_y) in self.neighbors(x, y) {
+                    if !visited.contains(&(n_x, n_y)) && self.inner[n_y][n_x] < 9 {
+                        queue.push((n_x, n_y));
+                    }
+                }
+            }
+            Some(visited.len())
+        } else {
+            None
         }
     }
 }
@@ -99,14 +120,22 @@ fn main() -> Result<()> {
     let height_map = HeightMap::try_from(aoc_utils::input()?)?;
     debug!("{:?}", height_map);
 
-    let mut risk_level = 0;
+    let mut top_3 = BinaryHeap::new();
+
     for y in 0..height_map.height {
         for x in 0..height_map.width {
-            risk_level += height_map.risk_level(x, y);
+            if let Some(basin_size) = height_map.basin_size(x, y) {
+                top_3.push(Reverse(basin_size));
+                if top_3.len() > 3 {
+                    top_3.pop();
+                }
+            }
         }
     }
 
-    println!("{}", risk_level);
+    let combined_top_3: usize = top_3.iter().map(|n| n.0).product();
+
+    println!("{}", combined_top_3);
 
     Ok(())
 }
