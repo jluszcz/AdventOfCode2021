@@ -11,7 +11,7 @@ struct Octopuses {
 }
 
 impl Octopuses {
-    fn step(&mut self) {
+    fn step(&mut self) -> bool {
         self.step_ct += 1;
 
         trace!("Step {}", self.step_ct);
@@ -47,14 +47,19 @@ impl Octopuses {
         }
 
         // Finally, any octopus that flashed has its energy level set to 0.
+        let mut flashes = 0;
         for (y, row) in flashed.iter().enumerate() {
             for (x, flashed) in row.iter().enumerate() {
                 if *flashed {
-                    self.flash_ct += 1;
+                    flashes += 1;
                     self.grid[y][x] = 0;
                 }
             }
         }
+
+        self.flash_ct += flashes;
+
+        flashes == 100
     }
 
     fn neighbors(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
@@ -152,11 +157,12 @@ fn main() -> Result<()> {
 
     let mut octopuses = Octopuses::try_from(aoc_utils::input()?)?;
 
-    for _ in 0..100 {
-        octopuses.step();
+    loop {
+        if octopuses.step() {
+            println!("{}", octopuses.step_ct);
+            break;
+        }
     }
-
-    println!("{}", octopuses.flash_ct);
 
     Ok(())
 }
@@ -320,6 +326,13 @@ mod test {
             octopuses.step();
         }
         assert_eq!(1656, octopuses.flash_ct);
+
+        for _ in 100..194 {
+            octopuses.step();
+        }
+
+        // Step 195 is an all-flash step
+        assert!(octopuses.step());
 
         Ok(())
     }
