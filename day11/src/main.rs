@@ -5,12 +5,20 @@ use std::str::FromStr;
 
 #[derive(Default)]
 struct Octopuses {
-    grid: [[usize; 10]; 10],
+    grid: Vec<Vec<usize>>,
     step_ct: usize,
     flash_ct: usize,
 }
 
 impl Octopuses {
+    fn new() -> Self {
+        Self {
+            grid: vec![vec![0; 10]; 10],
+            step_ct: 0,
+            flash_ct: 0,
+        }
+    }
+
     fn step(&mut self) -> bool {
         self.step_ct += 1;
 
@@ -38,7 +46,7 @@ impl Octopuses {
 
             flashed[y][x] = true;
 
-            for (n_x, n_y) in self.neighbors(x, y) {
+            for (n_x, n_y) in aoc_utils::grid_neighbors(&self.grid, x, y, true) {
                 self.grid[n_y][n_x] += 1;
                 if self.grid[n_y][n_x] > 9 && !flashed[n_y][n_x] {
                     to_flash.push((n_x, n_y));
@@ -60,55 +68,6 @@ impl Octopuses {
         self.flash_ct += flashes;
 
         flashes == 100
-    }
-
-    fn neighbors(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
-        let mut neighbors = Vec::new();
-
-        // Below
-        {
-            let y = y + 1;
-            if self.grid.get(y).and_then(|r| r.get(x)).is_some() {
-                neighbors.push((x, y));
-
-                // Lower Right
-                if self.grid[y].get(x + 1).is_some() {
-                    neighbors.push((x + 1, y));
-                }
-
-                // Lower Left
-                if let Some(x) = x.checked_sub(1) {
-                    neighbors.push((x, y));
-                }
-            }
-        }
-
-        // Above
-        if let Some(y) = y.checked_sub(1) {
-            neighbors.push((x, y));
-
-            // Upper Right
-            if self.grid[y].get(x + 1).is_some() {
-                neighbors.push((x + 1, y));
-            }
-
-            // Upper Left
-            if let Some(x) = x.checked_sub(1) {
-                neighbors.push((x, y));
-            }
-        }
-
-        // Right
-        if self.grid.get(y).and_then(|r| r.get(x + 1)).is_some() {
-            neighbors.push((x + 1, y));
-        }
-
-        // Left
-        if let Some(x) = x.checked_sub(1) {
-            neighbors.push((x, y));
-        }
-
-        neighbors
     }
 }
 
@@ -134,7 +93,7 @@ impl TryFrom<Vec<String>> for Octopuses {
             return Err(anyhow!("Expected 10 lines: {}", value.len()));
         }
 
-        let mut octopuses = Octopuses::default();
+        let mut octopuses = Octopuses::new();
         for (y, row) in value.into_iter().enumerate() {
             let row_len = row
                 .chars()
@@ -183,52 +142,6 @@ mod test {
             }
             true
         }
-    }
-
-    #[test]
-    fn test_neighbors() {
-        let octopuses = Octopuses::default();
-
-        fn assert_eq_ignore_order(
-            mut expected: Vec<(usize, usize)>,
-            mut neighbors: Vec<(usize, usize)>,
-        ) {
-            expected.sort_unstable();
-            neighbors.sort_unstable();
-            assert_eq!(expected, neighbors);
-        }
-
-        assert_eq_ignore_order(vec![(1, 0), (0, 1), (1, 1)], octopuses.neighbors(0, 0));
-
-        assert_eq_ignore_order(
-            vec![(4, 0), (6, 0), (5, 1), (4, 1), (6, 1)],
-            octopuses.neighbors(5, 0),
-        );
-
-        assert_eq_ignore_order(vec![(8, 0), (9, 1), (8, 1)], octopuses.neighbors(9, 0));
-
-        assert_eq_ignore_order(
-            vec![(0, 4), (0, 6), (1, 5), (1, 4), (1, 6)],
-            octopuses.neighbors(0, 5),
-        );
-
-        assert_eq_ignore_order(vec![(0, 8), (1, 9), (1, 8)], octopuses.neighbors(0, 9));
-
-        assert_eq_ignore_order(
-            vec![
-                (3, 3),
-                (3, 4),
-                (3, 5),
-                (4, 3),
-                (4, 5),
-                (5, 3),
-                (5, 4),
-                (5, 5),
-            ],
-            octopuses.neighbors(4, 4),
-        );
-
-        assert_eq_ignore_order(vec![(8, 8), (9, 8), (8, 9)], octopuses.neighbors(9, 9));
     }
 
     #[test]

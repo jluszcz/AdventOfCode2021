@@ -12,32 +12,10 @@ struct HeightMap {
 }
 
 impl HeightMap {
-    fn neighbors(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
-        let mut neighbors = Vec::new();
-
-        if self.inner.get(y + 1).and_then(|r| r.get(x)).is_some() {
-            neighbors.push((x, y + 1));
-        }
-
-        if let Some(neighbor_y) = y.checked_sub(1) {
-            neighbors.push((x, neighbor_y));
-        }
-
-        if self.inner.get(y).and_then(|r| r.get(x + 1)).is_some() {
-            neighbors.push((x + 1, y));
-        }
-
-        if let Some(neighbor_x) = x.checked_sub(1) {
-            neighbors.push((neighbor_x, y));
-        }
-
-        neighbors
-    }
-
     fn is_low_spot(&self, x: usize, y: usize) -> bool {
         let spot = self.inner[y][x];
 
-        self.neighbors(x, y)
+        aoc_utils::grid_neighbors(&self.inner, x, y, false)
             .into_iter()
             .all(|(x, y)| self.inner[y][x] > spot)
     }
@@ -59,7 +37,7 @@ impl HeightMap {
 
             while let Some((x, y)) = queue.pop() {
                 visited.insert((x, y));
-                for (n_x, n_y) in self.neighbors(x, y) {
+                for (n_x, n_y) in aoc_utils::grid_neighbors(&self.inner, x, y, false) {
                     if !visited.contains(&(n_x, n_y)) && self.inner[n_y][n_x] < 9 {
                         queue.push((n_x, n_y));
                     }
