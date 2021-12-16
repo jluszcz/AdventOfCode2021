@@ -1,36 +1,8 @@
 use anyhow::Result;
 use core::fmt;
 use log::{debug, log_enabled, trace, Level, LevelFilter};
-use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
-
-#[derive(Debug)]
-struct Point {
-    x: usize,
-    y: usize,
-    distance: usize,
-}
-
-impl PartialEq for Point {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x && self.y == other.y
-    }
-}
-
-impl Eq for Point {}
-
-impl Ord for Point {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.distance.cmp(&other.distance)
-    }
-}
-
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
 
 #[derive(Default)]
 struct Cave {
@@ -70,10 +42,8 @@ impl Cave {
 
             unvisited.remove(&curr);
 
-            if log_enabled!(Level::Trace) {
-                if unvisited.len() % progress_interval == 0 {
-                    trace!("Remaining unvisited: {}", unvisited.len());
-                }
+            if log_enabled!(Level::Trace) && unvisited.len() % progress_interval == 0 {
+                trace!("Remaining unvisited: {}", unvisited.len());
             }
 
             if curr == target {
