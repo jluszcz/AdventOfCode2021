@@ -145,7 +145,7 @@ impl fmt::Debug for Cave {
 fn main() -> Result<()> {
     aoc_utils::init_logger(LevelFilter::Info)?;
 
-    let cave = Cave::try_from(aoc_utils::test_input()?)?;
+    let cave = Cave::try_from(aoc_utils::input()?)?;
     let (_, risk) = cave.least_risky_path();
 
     println!("{}", risk);
